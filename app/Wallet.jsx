@@ -1,8 +1,7 @@
-// app/wallet.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; // ✅ import navigation
+import { useNavigation } from '@react-navigation/native';
 
 const transactions = [
   { id: '1', title: 'Payment Received', amount: '+₦5,000', date: 'Apr 28, 2025', type: 'income' },
@@ -11,9 +10,11 @@ const transactions = [
 ];
 
 const WalletScreen = () => {
-  const navigation = useNavigation(); // ✅ setup navigation
-
+  const navigation = useNavigation();
   const balance = 12500;
+
+  // State for hiding/showing balance
+  const [showBalance, setShowBalance] = useState(true);
 
   return (
     <View style={styles.container}>
@@ -21,12 +22,27 @@ const WalletScreen = () => {
         {/* Balance Card */}
         <View style={styles.balanceCard}>
           <Text style={styles.balanceTitle}>Wallet Balance</Text>
-          <Text style={styles.balanceAmount}>₦{balance.toLocaleString()}</Text>
+          <View style={styles.balanceRow}>
+            <Text style={styles.balanceAmount}>
+              {showBalance ? `₦${balance.toLocaleString()}` : '••••••••'}
+            </Text>
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setShowBalance((prev) => !prev)}
+              accessibilityLabel={showBalance ? 'Hide balance' : 'Show balance'}
+            >
+              <Ionicons
+                name={showBalance ? 'eye-outline' : 'eye-off-outline'}
+                size={28}
+                color="#fff"
+              />
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.buttonRow}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => navigation.navigate('DepositScreen')} // ✅ navigate to Deposit screen
+              onPress={() => navigation.navigate('DepositScreen')}
             >
               <Ionicons name="add-circle-outline" size={24} color="white" />
               <Text style={styles.buttonText}>Deposit</Text>
@@ -34,10 +50,10 @@ const WalletScreen = () => {
 
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => navigation.navigate('WithdrawScreen')} // ✅ navigate to Withdraw screen
+              onPress={() => navigation.navigate('WithdrawScreen')}
             >
               <Ionicons name="arrow-down-circle-outline" size={24} color="white" />
-              <Text style={styles.buttonText}>Withdraw</Text>
+              <Text style={styles.buttonText}>Transfer</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -75,7 +91,7 @@ const WalletScreen = () => {
 
 export default WalletScreen;
 
-// Styles stay the same
+// Styles stay the same, plus new styles for balance row and eye icon
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -101,11 +117,22 @@ const styles = StyleSheet.create({
     color: 'white',
     marginBottom: 8,
   },
+  balanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   balanceAmount: {
     fontSize: 36,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 20,
+    letterSpacing: 1,
+    marginRight: 10,
+  },
+  eyeIcon: {
+    padding: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonRow: {
     flexDirection: 'row',

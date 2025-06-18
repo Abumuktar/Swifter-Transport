@@ -1,5 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  Dimensions,
+  Image,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -8,30 +16,35 @@ const screenWidth = Dimensions.get('window').width;
 
 const Dashboard = () => {
   const navigation = useNavigation();
-
   const [menuVisible, setMenuVisible] = useState(false);
-  const slideAnim = useState(new Animated.Value(-screenWidth))[0];
+  const slideAnim = useRef(new Animated.Value(-screenWidth)).current;
+  const pulseAnimation = useRef(new Animated.Value(1)).current;
+  const logoAnim = useRef(new Animated.Value(0)).current;
+
+  const openMenu = () => {
+    setMenuVisible(true);
+    Animated.timing(slideAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeMenu = () => {
+    Animated.timing(slideAnim, {
+      toValue: -screenWidth,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => setMenuVisible(false));
+  };
 
   const toggleMenu = () => {
-    if (menuVisible) {
-      Animated.timing(slideAnim, {
-        toValue: -screenWidth,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => setMenuVisible(false));
-    } else {
-      setMenuVisible(true);
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
+    menuVisible ? closeMenu() : openMenu();
   };
 
   const [userProfile] = useState({
     name: "Isma'il Sa'id",
-    email: 'ismail@example.com',
+    email: 'ismeed@gmail.com',
     totalRides: 120,
     totalEarnings: '$5000',
     walletBalance: '$1500',
@@ -40,11 +53,9 @@ const Dashboard = () => {
     couriers: 3,
   });
 
-  const pulseAnimation = new Animated.Value(1);
-
   useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([ 
+    Animated.loop(
+      Animated.sequence([
         Animated.timing(pulseAnimation, {
           toValue: 1.2,
           duration: 800,
@@ -56,43 +67,63 @@ const Dashboard = () => {
           useNativeDriver: true,
         }),
       ])
-    );
-    animation.start();
-    return () => animation.stop();
+    ).start();
+
+    Animated.timing(logoAnim, {
+      toValue: 1,
+      duration: 1000,
+      delay: 200,
+      useNativeDriver: true,
+    }).start();
   }, []);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Slide-In Menu */}
       {menuVisible && (
-        <TouchableOpacity style={styles.overlay} onPress={toggleMenu} />
+        <TouchableOpacity style={styles.overlay} onPress={closeMenu} />
       )}
+
       <Animated.View style={[styles.sideMenu, { transform: [{ translateX: slideAnim }] }]}>
-        <TouchableOpacity onPress={() => { toggleMenu(); navigation.navigate('Ticket'); }} style={styles.menuItem}>
+        <TouchableOpacity onPress={() => { closeMenu(); navigation.navigate('Ticket'); }} style={styles.menuItem}>
           <Ionicons name="ticket-outline" size={24} color="#4facfe" />
           <Text style={styles.menuText}>Buy Ticket</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => { toggleMenu(); navigation.navigate('TrackCourier'); }} style={styles.menuItem}>
-          <Ionicons name="bicycle-outline" size={24} color="#4facfe" />  {/* Updated icon */}
+        <TouchableOpacity onPress={() => { closeMenu(); navigation.navigate('TrackCourier'); }} style={styles.menuItem}>
+          <Ionicons name="bicycle-outline" size={24} color="#4facfe" />
           <Text style={styles.menuText}>Track Courier</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => { toggleMenu(); navigation.navigate('CreateCourierAccount'); }} style={styles.menuItem}>
+        <TouchableOpacity onPress={() => { closeMenu(); navigation.navigate('CreateCourierAccount'); }} style={styles.menuItem}>
           <Ionicons name="person-add-outline" size={24} color="#4facfe" />
-          <Text style={styles.menuText}>Create Courier Account</Text>
+          <Text style={styles.menuText}>Courier Account</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => { toggleMenu(); navigation.navigate('Emergency'); }} style={styles.menuItem}>
-          <Ionicons name="warning-outline" size={24} color="red" />  {/* Changed color to red */}
+        <TouchableOpacity onPress={() => { closeMenu(); navigation.navigate('Emergency'); }} style={styles.menuItem}>
+          <Ionicons name="warning-outline" size={24} color="red" />
           <Text style={styles.menuText}>Emergency</Text>
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Header */}
+      {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconButton} onPress={toggleMenu}>
           <Ionicons name="menu" size={26} color="#fff" />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>ISMEED</Text>
+        <View style={styles.logoAbsoluteContainer}>
+          <Animated.View
+            style={[
+              styles.logoContainer,
+              {
+                opacity: logoAnim,
+                transform: [{ scale: logoAnim }],
+              },
+            ]}
+          >
+            <Image
+              source={require('../assets/images/3.png')}
+              style={styles.logo}
+            />
+          </Animated.View>
+        </View>
 
         <TouchableOpacity
           style={styles.iconButton}
@@ -103,14 +134,14 @@ const Dashboard = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Profile Card */}
+      {/* PROFILE CARD */}
       <View style={styles.profileCard}>
         <Ionicons name="person-circle-outline" size={80} color="#4facfe" />
         <Text style={styles.profileName}>{userProfile.name}</Text>
         <Text style={styles.profileEmail}>{userProfile.email}</Text>
       </View>
 
-      {/* Wallet & Tickets */}
+      {/* QUICK ACCESS */}
       <View style={styles.quickAccessRow}>
         <TouchableOpacity style={styles.quickCard} onPress={() => navigation.navigate('Wallet')}>
           <Ionicons name="wallet-outline" size={30} color="#4facfe" />
@@ -125,7 +156,6 @@ const Dashboard = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Bookings & Courier */}
       <View style={styles.quickAccessRow}>
         <TouchableOpacity style={styles.quickCard} onPress={() => navigation.navigate('Bookings')}>
           <Ionicons name="bookmarks-outline" size={30} color="#4facfe" />
@@ -140,18 +170,16 @@ const Dashboard = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Footer Navigation */}
+      {/* FOOTER */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('Home')}>
           <Ionicons name="home-outline" size={24} color="#4facfe" />
           <Text style={styles.footerText}>Home</Text>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('HelpCentre')}>
           <Ionicons name="help-circle-outline" size={24} color="#4facfe" />
           <Text style={styles.footerText}>Help Centre</Text>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.footerButton} onPress={() => navigation.navigate('Settings')}>
           <Ionicons name="settings-outline" size={24} color="#4facfe" />
           <Text style={styles.footerText}>Settings</Text>
@@ -178,15 +206,34 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     elevation: 8,
+    zIndex: 100,
+    minHeight: 80,
   },
-  headerTitle: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: 'bold',
+  logoAbsoluteContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 70, // Match logo height or slightly larger
+    top: 20,
+    zIndex: 0,
+    pointerEvents: 'none', // Ensures no interference with side icons
+  },
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 250,
+    height: 70,
+  },
+  logo: {
+    width: 250,
+    height: 70,
+    resizeMode: 'contain',
   },
   iconButton: {
     padding: 8,
-    position: 'relative',
+    zIndex: 101,
   },
   badgePulse: {
     width: 10,
@@ -196,6 +243,39 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     right: 2,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    zIndex: 199,
+  },
+  sideMenu: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: screenWidth * 0.75,
+    height: '100%',
+    backgroundColor: '#fff',
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    zIndex: 200,
+    elevation: 15,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  menuText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 10,
   },
   profileCard: {
     backgroundColor: '#fff',
@@ -265,39 +345,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#4facfe',
     marginTop: 4,
-  },
-  // Slide-in Menu Styles
-  sideMenu: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: screenWidth * 0.75,
-    height: '100%',
-    backgroundColor: '#fff',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    zIndex: 100,
-    elevation: 10,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  menuText: {
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 10,
-  },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
 });
 

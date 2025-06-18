@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, ScrollView, Text, StyleSheet, TextInput, Image, Alert, Modal, TouchableOpacity
+  View, ScrollView, Text, StyleSheet, TextInput, Alert, Modal, TouchableOpacity
 } from 'react-native';
 import { Avatar, Button, Card } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -61,38 +61,35 @@ export default function CourierScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Connect with couriers</Text>
+      <Text style={styles.heading}>Connect with Couriers</Text>
 
-      {/* Search and Filter Row */}
       <View style={styles.searchRow}>
         <View style={styles.searchContainer}>
           <Icon name="search" size={22} color="#7D8DA6" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by name or location"
+            placeholder="Search by name or status"
             placeholderTextColor="#B0B9C8"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
-        <Picker
-          selectedValue={selectedSort}
-          style={styles.picker}
-          onValueChange={(itemValue) => setSelectedSort(itemValue)}
-        >
-          <Picker.Item label="Sort" value="none" />
-          <Picker.Item label="Highest Rating" value="highest" />
-          <Picker.Item label="Lowest Rating" value="lowest" />
-        </Picker>
+        <View style={styles.pickerWrapper}>
+          <Picker
+            selectedValue={selectedSort}
+            style={styles.picker}
+            onValueChange={(itemValue) => setSelectedSort(itemValue)}
+          >
+            <Picker.Item label="Sort" value="none" />
+            <Picker.Item label="Highest Rating" value="highest" />
+            <Picker.Item label="Lowest Rating" value="lowest" />
+          </Picker>
+        </View>
       </View>
 
-      {/* Courier Cards */}
       <ScrollView>
         {sortedCouriers.map((courier, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() => setSelectedCourier(courier)}
-          >
+          <TouchableOpacity key={index} onPress={() => setSelectedCourier(courier)}>
             <Card style={styles.card}>
               <View style={styles.cardContent}>
                 <Avatar.Image size={56} source={courier.image} />
@@ -122,7 +119,6 @@ export default function CourierScreen() {
         ))}
       </ScrollView>
 
-      {/* Courier Modal */}
       <Modal
         visible={selectedCourier !== null}
         transparent={true}
@@ -139,7 +135,8 @@ export default function CourierScreen() {
             <Button
               mode="contained"
               onPress={() => handleRequest(selectedCourier?.name)}
-              style={{ marginTop: 20, backgroundColor: '#2D9CDB' }}
+              style={styles.requestBtn}
+              labelStyle={{ color: '#fff' }}
             >
               Request Courier
             </Button>
@@ -147,7 +144,7 @@ export default function CourierScreen() {
             <Button
               mode="outlined"
               onPress={() => setSelectedCourier(null)}
-              style={{ marginTop: 12 }}
+              style={styles.closeBtn}
             >
               Close
             </Button>
@@ -160,15 +157,15 @@ export default function CourierScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F5F9FF',
+    backgroundColor: '#F8F8F8',
     padding: 16,
     flex: 1,
   },
   heading: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: '700',
     marginBottom: 16,
-    color: '#1A1A1A',
+    color: '#1D3557',
   },
   searchRow: {
     flexDirection: 'row',
@@ -179,28 +176,33 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#fff',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 12,
     elevation: 2,
-    marginRight: 8,
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
-    marginHorizontal: 8,
-    color: '#1A1A1A',
+    marginLeft: 8,
+    color: '#333',
+    fontSize: 15,
+  },
+  pickerWrapper: {
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    elevation: 2,
+    overflow: 'hidden',
   },
   picker: {
     height: 48,
-    width: 150,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    elevation: 2,
+    width: 140,
+    color: '#1D3557',
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
+    backgroundColor: '#fff',
+    borderRadius: 16,
     marginBottom: 16,
     elevation: 3,
   },
@@ -215,12 +217,12 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
+    fontWeight: '700',
+    color: '#1D3557',
   },
   status: {
-    color: '#2D9CDB',
     fontSize: 13,
+    color: '#4facfe',
     marginBottom: 4,
   },
   ratingRow: {
@@ -229,43 +231,57 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     marginLeft: 6,
-    color: '#1A1A1A',
+    color: '#333',
+    fontSize: 13,
   },
   comment: {
     marginTop: 6,
-    color: '#7D8DA6',
     fontSize: 13,
+    color: '#777',
   },
   buttons: {
     justifyContent: 'space-between',
     marginLeft: 8,
   },
   chatBtn: {
-    backgroundColor: '#E6F0FA',
-    marginBottom: 4,
+    backgroundColor: '#F1FAEE',
+    marginBottom: 6,
   },
   callBtn: {
-    backgroundColor: '#E6F0FA',
+    backgroundColor: '#F1FAEE',
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#fff',
     padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 8,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    elevation: 6,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#1D3557',
     marginBottom: 10,
   },
   modalText: {
     fontSize: 15,
+    color: '#444',
     marginVertical: 4,
+  },
+  requestBtn: {
+    backgroundColor: '#4facfe',
+    borderRadius: 20,
+    marginTop: 20,
+  },
+  closeBtn: {
+    marginTop: 10,
+    borderColor: '#4facfe',
+    borderWidth: 1,
+    borderRadius: 20,
   },
 });

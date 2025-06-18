@@ -1,4 +1,3 @@
-// app/ChangePassword.jsx
 import React, { useState } from 'react';
 import {
   View,
@@ -11,14 +10,15 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const ChangePassword = () => {
   const router = useRouter();
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChangePassword = () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -31,110 +31,199 @@ const ChangePassword = () => {
       return;
     }
 
-    // Handle password update logic here
+    if (newPassword.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 digits');
+      return;
+    }
+
+    // Simulate success
     Alert.alert('Success', 'Password changed successfully!');
     router.back();
   };
 
+  // Limit password to 6 digits only
+  const handlePasswordInput = (val, setter) => {
+    // Only allow up to 6 digits, no letters
+    if (/^\d{0,6}$/.test(val)) {
+      setter(val);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={styles.header}>
-          <Ionicons name="arrow-back" size={24} color="#333" onPress={() => router.back()} />
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back-outline" size={24} color="#4facfe" />
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Change Password</Text>
         </View>
 
-        {/* Form */}
-        <View style={styles.form}>
-          <Text style={styles.label}>Old Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter old password"
-            secureTextEntry
-            value={oldPassword}
-            onChangeText={setOldPassword}
-          />
+        {/* Card */}
+        <View style={styles.card}>
+          {/* Old Password */}
+          <Text style={styles.label}>Old 6-digit Password</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons name="lock-closed-outline" size={20} color="#4facfe" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter old password"
+              placeholderTextColor="#aaa"
+              secureTextEntry={!showPassword}
+              keyboardType="number-pad"
+              value={oldPassword}
+              maxLength={6}
+              onChangeText={(val) => handlePasswordInput(val, setOldPassword)}
+              autoComplete="off"
+              textContentType="oneTimeCode"
+            />
+          </View>
 
-          <Text style={styles.label}>New Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter new password"
-            secureTextEntry
-            value={newPassword}
-            onChangeText={setNewPassword}
-          />
+          {/* New Password */}
+          <Text style={styles.label}>New 6-digit Password</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons name="lock-open-outline" size={20} color="#4facfe" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter new password"
+              placeholderTextColor="#aaa"
+              secureTextEntry={!showPassword}
+              keyboardType="number-pad"
+              value={newPassword}
+              maxLength={6}
+              onChangeText={(val) => handlePasswordInput(val, setNewPassword)}
+              autoComplete="off"
+              textContentType="oneTimeCode"
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color="#999"
+              />
+            </TouchableOpacity>
+          </View>
 
-          <Text style={styles.label}>Confirm New Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm new password"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
+          {/* Confirm Password */}
+          <Text style={styles.label}>Confirm New 6-digit Password</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons name="shield-checkmark-outline" size={20} color="#4facfe" style={styles.icon} />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm new password"
+              placeholderTextColor="#aaa"
+              secureTextEntry={!showPassword}
+              keyboardType="number-pad"
+              value={confirmPassword}
+              maxLength={6}
+              onChangeText={(val) => handlePasswordInput(val, setConfirmPassword)}
+              autoComplete="off"
+              textContentType="oneTimeCode"
+            />
+          </View>
+
+          {/* Password hint */}
+          <Text style={styles.hintText}>
+            Password must be exactly 6 digits. Only numbers are allowed.
+          </Text>
+
+          {/* Submit Button */}
+          <TouchableOpacity style={styles.button} onPress={handleChangePassword}>
+            <Text style={styles.buttonText}>Save New Password</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Save Button */}
-        <TouchableOpacity style={styles.saveButton} onPress={handleChangePassword}>
-          <Text style={styles.saveButtonText}>Save New Password</Text>
-        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
+export default ChangePassword;
+
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#f9f9f9',
+    padding: 24,
+    backgroundColor: '#F8F8F8',
     flexGrow: 1,
     justifyContent: 'center',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 28,
+  },
+  backBtn: {
+    marginRight: 10,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: 20,
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1D3557',
   },
-  form: {
-    marginBottom: 40,
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 3,
   },
   label: {
-    fontSize: 16,
-    color: '#555',
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1D3557',
     marginBottom: 8,
-    marginTop: 15,
+    marginTop: 20,
+    letterSpacing: 0.1,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f7f9fc',
+    borderRadius: 30,
+    paddingHorizontal: 16,
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#dfe6ed',
+  },
+  icon: {
+    marginRight: 8,
   },
   input: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
+    flex: 1,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    color: '#333',
+    letterSpacing: 4,
+    paddingVertical: 0,
+    backgroundColor: 'transparent',
   },
-  saveButton: {
+  button: {
     backgroundColor: '#4facfe',
-    paddingVertical: 15,
+    paddingVertical: 14,
     borderRadius: 30,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 30,
+    shadowColor: '#4facfe',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
   },
-  saveButtonText: {
+  buttonText: {
     color: '#fff',
+    fontWeight: '700',
     fontSize: 16,
-    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  hintText: {
+    color: '#7b8ca6',
+    fontSize: 13,
+    marginTop: 12,
+    marginBottom: 4,
+    textAlign: 'center',
   },
 });
-
-export default ChangePassword;

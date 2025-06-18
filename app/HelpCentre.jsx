@@ -1,68 +1,94 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Linking } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Linking,
+  Animated,
+  Easing,
+  Dimensions,
+  Platform,
+  Modal,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import SudoBot from './SudoBot';
+
+const { width } = Dimensions.get('window');
+
+const PRIMARY_BLUE = '#4facfe';
+
+const categories = [
+  {
+    name: 'Account & Profile',
+    id: 1,
+    topics: [
+      'How to change your password?',
+      'How to update your email?',
+      'Account security tips',
+    ],
+  },
+  {
+    name: 'Payment & Billing',
+    id: 2,
+    topics: [
+      'How to add a payment method?',
+      'How to request a refund?',
+      'Payment issues troubleshooting',
+    ],
+  },
+  {
+    name: 'App Issues',
+    id: 3,
+    topics: ['App crashing', 'Fixing bugs', 'App not loading'],
+  },
+  {
+    name: 'Privacy & Security',
+    id: 4,
+    topics: [
+      'How to secure your account?',
+      'Privacy settings',
+      'Data encryption & protection',
+    ],
+  },
+];
+
+const phoneNumber = '+2349023107077';
 
 const HelpCentre = () => {
   const [searchText, setSearchText] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [sudoBotVisible, setSudoBotVisible] = useState(false);
+  const navigation = useNavigation();
 
-  const categories = [
-    { name: 'Account & Profile', id: 1, topics: ['How to change your password?', 'How to update your email?', 'Account security tips'] },
-    { name: 'Payment & Billing', id: 2, topics: ['How to add a payment method?', 'How to request a refund?', 'Payment issues troubleshooting'] },
-    { name: 'App Issues', id: 3, topics: ['App crashing', 'Fixing bugs', 'App not loading'] },
-    { name: 'Privacy & Security', id: 4, topics: ['How to secure your account?', 'Privacy settings', 'Data encryption & protection'] },
-  ];
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      easing: Easing.out(Easing.exp),
+      useNativeDriver: true,
+    }).start();
+  }, []);
 
-  const phoneNumber = '+2349023107077';  // Phone number for chat support (can use WhatsApp or SMS)
-
-  const handleSearch = (text) => {
-    setSearchText(text);
-  };
-
-  const renderCategory = (category) => {
-    return (
-      <View style={styles.category}>
-        <Text style={styles.categoryTitle}>{category.name}</Text>
-        <ScrollView style={styles.topics}>
-          {category.topics.map((topic, index) => (
-            <TouchableOpacity key={index} onPress={() => handleCategoryClick(category, topic)}>
-              <Text style={styles.topic}>{topic}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-    );
-  };
+  const handleSearch = (text) => setSearchText(text);
 
   const handleCategoryClick = (category, topic) => {
     setSelectedCategory({ category, topic });
   };
 
-  const renderSearchResults = () => {
-    if (!searchText) return null;
-
-    const searchResults = categories.flatMap((category) =>
-      category.topics.filter((topic) => topic.toLowerCase().includes(searchText.toLowerCase()))
-    );
-
-    if (searchResults.length > 0) {
-      return (
-        <ScrollView>
-          {searchResults.map((result, index) => (
-            <TouchableOpacity key={index} onPress={() => handleSearchResultClick(result)}>
-              <Text style={styles.searchResult}>{result}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      );
-    } else {
-      return <Text style={styles.noResults}>No results found</Text>;
-    }
-  };
-
   const handleSearchResultClick = (result) => {
-    const [categoryName, topic] = result.split(' - '); // Just a simple example
-    setSelectedCategory({ category: categories.find((cat) => cat.name === categoryName), topic });
+    for (const category of categories) {
+      for (const topic of category.topics) {
+        if (topic === result) {
+          setSelectedCategory({ category, topic });
+          return;
+        }
+      }
+    }
   };
 
   const handlePhoneCall = () => {
@@ -70,28 +96,84 @@ const HelpCentre = () => {
     Linking.openURL(phoneNumberCall);
   };
 
-  const handleChatSupport = () => {
-    const chatUrl = `https://wa.me/${phoneNumber}`; // WhatsApp link (adjust to the format you need for your chat service)
-    Linking.openURL(chatUrl);
+  const renderCategory = (category) => (
+    <Animated.View key={category.id} style={[styles.categoryCard, { opacity: fadeAnim }]}>
+      <Text style={styles.categoryTitle}>{category.name}</Text>
+      <View style={styles.topicsList}>
+        {category.topics.map((topic, idx) => (
+          <TouchableOpacity
+            key={idx}
+            style={styles.topicButton}
+            onPress={() => handleCategoryClick(category, topic)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="help-circle-outline" size={18} color={PRIMARY_BLUE} />
+            <Text style={styles.topicText}>{topic}</Text>
+            <Ionicons name="chevron-forward" size={18} color="#B0BEC5" />
+          </TouchableOpacity>
+        ))}
+      </View>
+    </Animated.View>
+  );
+
+  const renderSearchResults = () => {
+    if (!searchText) return null;
+
+    const searchResults = categories.flatMap((category) =>
+      category.topics.filter((topic) =>
+        topic.toLowerCase().includes(searchText.toLowerCase())
+      )
+    );
+
+    if (searchResults.length > 0) {
+      return (
+        <ScrollView style={styles.resultsContainer} keyboardShouldPersistTaps="handled">
+          {searchResults.map((result, idx) => (
+            <TouchableOpacity
+              key={idx}
+              style={styles.searchResultButton}
+              onPress={() => handleSearchResultClick(result)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="document-text-outline" size={18} color="#7E57C2" />
+              <Text style={styles.searchResultText}>{result}</Text>
+              <Ionicons name="chevron-forward" size={18} color="#B0BEC5" />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      );
+    }
+    return (
+      <View style={styles.noResultsContainer}>
+        <Ionicons name="alert-circle-outline" size={24} color="#FF7043" />
+        <Text style={styles.noResultsText}>No results found</Text>
+      </View>
+    );
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.iconButton}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
+      {/* Header */}
+      <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
+        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={28} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Help Centre</Text>
-      </View>
+        <View style={{ width: 32 }} />
+      </Animated.View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#4facfe" style={styles.searchIcon} />
+        <Ionicons name="search" size={22} color={PRIMARY_BLUE} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search for help..."
+          placeholder="How can we help you?"
+          placeholderTextColor="#B0BEC5"
           value={searchText}
           onChangeText={handleSearch}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+          underlineColorAndroid="transparent"
         />
       </View>
 
@@ -100,91 +182,323 @@ const HelpCentre = () => {
 
       {/* Categories */}
       {!searchText && (
-        <ScrollView style={styles.categoriesContainer}>
-          {categories.map((category) => renderCategory(category))}
+        <ScrollView
+          style={styles.categoriesContainer}
+          contentContainerStyle={{ paddingBottom: 140 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {categories.map(renderCategory)}
         </ScrollView>
       )}
 
-      {/* Selected Topic Details */}
-      {selectedCategory && (
-        <View style={styles.selectedTopic}>
-          <Text style={styles.selectedCategory}>{selectedCategory.category.name}</Text>
-          <Text style={styles.selectedTopicText}>{selectedCategory.topic}</Text>
+      {/* Selected Topic Modal */}
+      <Modal
+        visible={!!selectedCategory}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedCategory(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.selectedTopicModalCard}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setSelectedCategory(null)}
+              activeOpacity={0.7}
+              accessibilityLabel="Close topic details"
+            >
+              <Ionicons name="close" size={22} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.selectedCategoryTitle}>
+              {selectedCategory?.category.name}
+            </Text>
+            <Text style={styles.selectedTopicTitle}>
+              {selectedCategory?.topic}
+            </Text>
+            <Text style={styles.selectedTopicInfo}>
+              For detailed instructions, please refer to our official documentation or contact support.
+            </Text>
+          </View>
         </View>
-      )}
+      </Modal>
+
+      {/* SudoBot Modal */}
+      <Modal
+        visible={sudoBotVisible}
+        transparent={false}
+        animationType="slide"
+        onRequestClose={() => setSudoBotVisible(false)}
+      >
+        <View style={{ flex: 1 }}>
+          <SudoBot />
+          <TouchableOpacity
+            onPress={() => setSudoBotVisible(false)}
+            style={{
+              position: 'absolute',
+              top: Platform.OS === 'ios' ? 54 : 34,
+              right: 18,
+              backgroundColor: PRIMARY_BLUE,
+              borderRadius: 20,
+              padding: 8,
+              elevation: 7,
+            }}
+          >
+            <Ionicons name="close" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </Modal>
 
       {/* Support Contact */}
-      <View style={styles.supportContainer}>
-        <TouchableOpacity style={styles.contactButton} onPress={handleChatSupport}>
-          <Ionicons name="chatbubble-ellipses" size={20} color="#fff" />
-          <Text style={styles.contactText}>Chat with Support</Text>
+      <Animated.View style={[styles.supportContainer, { opacity: fadeAnim }]}>
+        <TouchableOpacity
+          style={[styles.contactButton, styles.shadow]}
+          onPress={() => setSudoBotVisible(true)}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="shield-outline" size={20} color="#fff" />
+          <Text style={styles.contactText}>Chat with Sudo</Text>
         </TouchableOpacity>
-
-        {/* Phone Support */}
-        <TouchableOpacity style={styles.contactButton} onPress={handlePhoneCall}>
-          <Ionicons name="call" size={20} color="#fff" />
+        <TouchableOpacity
+          style={[styles.contactButton, styles.shadow]}
+          onPress={handlePhoneCall}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="call-outline" size={20} color="#fff" />
           <Text style={styles.contactText}>Call Support</Text>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: {
+    flex: 1,
+    backgroundColor: '#F7F9FB',
+    position: 'relative',
+  },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#4facfe',
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 20,
+    justifyContent: 'space-between',
+    backgroundColor: PRIMARY_BLUE,
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 34,
+    borderBottomRightRadius: 34,
+    elevation: 5,
+    shadowColor: PRIMARY_BLUE,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
   },
-  headerTitle: { fontSize: 24, color: '#fff', fontWeight: 'bold' },
-  iconButton: { padding: 8 },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 0.5,
+  },
+  iconButton: {
+    padding: 4,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
   searchContainer: {
     flexDirection: 'row',
-    marginHorizontal: 20,
-    marginTop: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-    paddingBottom: 5,
+    alignItems: 'center',
+    marginHorizontal: 28,
+    marginTop: 18,
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    elevation: 2,
+    shadowColor: PRIMARY_BLUE,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
   },
-  searchInput: { flex: 1, padding: 8, fontSize: 16 },
-  searchIcon: { marginRight: 10 },
-  categoriesContainer: { marginTop: 20, paddingHorizontal: 20 },
-  category: { marginBottom: 20 },
-  categoryTitle: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  topics: { marginTop: 10 },
-  topic: { fontSize: 16, color: '#4facfe', marginBottom: 10 },
-  searchResult: { fontSize: 16, color: '#4facfe', marginVertical: 5 },
-  noResults: { fontSize: 16, color: '#777', textAlign: 'center' },
-  selectedTopic: {
-    marginTop: 20,
-    padding: 20,
-    backgroundColor: '#f8f8f8',
+  searchIcon: { marginRight: 8 },
+  searchInput: {
+    flex: 1,
+    fontSize: 17,
+    color: '#263238',
+    paddingVertical: 8,
+    paddingHorizontal: 0,
+    borderRadius: 8,
+  },
+  categoriesContainer: {
+    marginTop: 12,
+    paddingHorizontal: 18,
+  },
+  categoryCard: {
+    backgroundColor: '#fff',
+    borderRadius: 22,
+    paddingVertical: 20,
+    paddingHorizontal: 18,
+    marginBottom: 18,
+    elevation: 2,
+    shadowColor: PRIMARY_BLUE,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 4,
+  },
+  categoryTitle: {
+    fontSize: 19,
+    fontWeight: '600',
+    color: '#37474F',
+    marginBottom: 10,
+    letterSpacing: 0.2,
+  },
+  topicsList: {
+    borderTopWidth: 1,
+    borderTopColor: '#ECEFF1',
+    paddingTop: 12,
+  },
+  topicButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
     borderRadius: 10,
+    backgroundColor: '#F4F8FB',
+    shadowColor: PRIMARY_BLUE,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
   },
-  selectedCategory: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  selectedTopicText: { fontSize: 16, color: '#777', marginTop: 10 },
+  topicText: {
+    fontSize: 16,
+    color: PRIMARY_BLUE,
+    fontWeight: '500',
+    marginLeft: 10,
+    flex: 1,
+  },
+  resultsContainer: {
+    marginHorizontal: 28,
+    marginTop: 12,
+    marginBottom: 10,
+    maxHeight: 200,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    elevation: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  searchResultButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3E5F5',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginVertical: 4,
+  },
+  searchResultText: {
+    fontSize: 15,
+    color: '#7E57C2',
+    flex: 1,
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  noResultsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 28,
+    marginTop: 14,
+    backgroundColor: '#fff3e0',
+    borderRadius: 14,
+    paddingVertical: 14,
+    justifyContent: 'center',
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: '#FF7043',
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(23,40,60,0.21)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  selectedTopicModalCard: {
+    width: width * 0.9,
+    backgroundColor: '#fff',
+    borderRadius: 22,
+    padding: 26,
+    elevation: 8,
+    shadowColor: PRIMARY_BLUE,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    zIndex: 30,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    backgroundColor: PRIMARY_BLUE,
+    borderRadius: 18,
+    padding: 4,
+    zIndex: 10,
+  },
+  selectedCategoryTitle: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: PRIMARY_BLUE,
+    marginBottom: 10,
+    marginTop: 14,
+  },
+  selectedTopicTitle: {
+    fontSize: 20,
+    color: '#263238',
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  selectedTopicInfo: {
+    fontSize: 16,
+    color: '#606060',
+    marginTop: 6,
+    lineHeight: 22,
+    letterSpacing: 0.1,
+  },
   supportContainer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 32,
     left: 20,
     right: 20,
-    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    zIndex: 10,
   },
   contactButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4facfe',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 30,
-    marginBottom: 10,
+    backgroundColor: PRIMARY_BLUE,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    borderRadius: 28,
+    marginHorizontal: 4,
+    minWidth: width * 0.38,
+    justifyContent: 'center',
   },
-  contactText: { fontSize: 16, color: '#fff', marginLeft: 10 },
+  contactText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  shadow: {
+    elevation: 3,
+    shadowColor: '#1565C0',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.13,
+    shadowRadius: 6,
+  },
 });
 
 export default HelpCentre;

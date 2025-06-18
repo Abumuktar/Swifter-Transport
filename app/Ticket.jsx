@@ -7,10 +7,14 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  LogBox,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
+
+// Ignore harmless warning from underlying libraries in dev
+LogBox.ignoreLogs(['useInsertionEffect must not schedule updates']);
 
 const Ticket = () => {
   const navigation = useNavigation();
@@ -18,32 +22,47 @@ const Ticket = () => {
   const [destination, setDestination] = useState('');
   const [travelDate, setTravelDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [availableTrips, setAvailableTrips] = useState([]);
+  const [availableParks, setAvailableParks] = useState([]);
 
-  const handleFindTrips = () => {
+  const handleSearchParks = () => {
     if (!departure || !destination) {
       Alert.alert('Missing Fields', 'Please enter both departure and destination.');
       return;
     }
 
-    const trips = [
+    if (departure.toLowerCase() === destination.toLowerCase()) {
+      Alert.alert('Invalid Route', 'Departure and destination cannot be the same.');
+      return;
+    }
+
+    const parks = [
       {
         id: 1,
-        busName: 'Evelight Express',
-        time: '9:00 AM',
-        price: '₦3,500',
-        duration: '6h',
+        name: 'Evelight Motor Park',
+        location: 'Lagos',
+        destination: 'Abuja',
+        operators: 'Evelight Express',
       },
       {
         id: 2,
-        busName: 'SpeedLink',
-        time: '12:30 PM',
-        price: '₦4,000',
-        duration: '5h 30m',
+        name: 'Unity Park Terminal',
+        location: 'Lagos',
+        destination: 'Abuja',
+        operators: 'SpeedLink Transport',
       },
     ];
 
-    setAvailableTrips(trips);
+    const results = parks.filter(
+      p =>
+        p.location.toLowerCase() === departure.toLowerCase() &&
+        p.destination.toLowerCase() === destination.toLowerCase()
+    );
+
+    if (results.length === 0) {
+      Alert.alert('No Parks Found', 'No motor parks match your search.');
+    }
+
+    setAvailableParks(results);
   };
 
   return (
@@ -53,7 +72,7 @@ const Ticket = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#F1FAEE" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Buy Trip Ticket</Text>
+        <Text style={styles.headerTitle}>Search Transport Parks</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -96,27 +115,28 @@ const Ticket = () => {
           />
         )}
 
-        <TouchableOpacity style={styles.button} onPress={handleFindTrips}>
+        <TouchableOpacity style={styles.button} onPress={handleSearchParks}>
           <Ionicons name="search" size={20} color="#F1FAEE" />
-          <Text style={styles.buttonText}>Find Trips</Text>
+          <Text style={styles.buttonText}>Search Parks</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Available Trips */}
-      {availableTrips.length > 0 && (
+      {/* Available Parks */}
+      {availableParks.length > 0 && (
         <View style={styles.resultsContainer}>
-          <Text style={styles.sectionTitle}>Available Trips</Text>
-          {availableTrips.map((trip) => (
-            <View key={trip.id} style={styles.tripCard}>
-              <Text style={styles.busName}>{trip.busName}</Text>
+          <Text style={styles.sectionTitle}>Available Motor Parks</Text>
+          {availableParks.map((park) => (
+            <View key={park.id} style={styles.tripCard}>
+              <Text style={styles.busName}>{park.name}</Text>
               <Text style={styles.tripDetails}>
-                🕒 {trip.time} | {trip.duration} | 💰 {trip.price}
+                From: {park.location} → To: {park.destination}
               </Text>
+              <Text style={styles.tripDetails}>Operator: {park.operators}</Text>
               <TouchableOpacity
                 style={styles.purchaseBtn}
-                onPress={() => Alert.alert('Buy Ticket', 'This feature is coming soon!')}
+                onPress={() => navigation.navigate('BookingDetails', { park })}
               >
-                <Text style={styles.purchaseText}>Buy Ticket</Text>
+                <Text style={styles.purchaseText}>Select Park</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -128,20 +148,21 @@ const Ticket = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F8F8F8', // Light gray, clean background
+    backgroundColor: '#F8F8F8',
     flex: 1,
   },
   header: {
-    backgroundColor: '#4facfe', // Primary Brand Blue
+    backgroundColor: '#4facfe',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 18,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+    elevation: 5,
   },
   headerTitle: {
-    color: '#F1FAEE', // White text
+    color: '#F1FAEE',
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -152,11 +173,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 16,
     marginBottom: 4,
-    color: '#333', // Text Dark
+    color: '#333',
     fontSize: 14,
   },
   input: {
-    backgroundColor: '#fff', // White background
+    backgroundColor: '#fff',
     padding: 14,
     borderRadius: 12,
     fontSize: 15,
@@ -179,11 +200,11 @@ const styles = StyleSheet.create({
   dateText: {
     marginLeft: 10,
     fontSize: 15,
-    color: '#4facfe', // Text color for date picker
+    color: '#4facfe',
   },
   button: {
     flexDirection: 'row',
-    backgroundColor: '#4facfe', // Button color
+    backgroundColor: '#4facfe',
     padding: 15,
     borderRadius: 12,
     marginTop: 28,
@@ -193,7 +214,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     marginLeft: 8,
-    color: '#F1FAEE', // White text
+    color: '#F1FAEE',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -204,16 +225,16 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#333', // Text Dark
+    color: '#333',
     marginBottom: 12,
   },
   tripCard: {
-    backgroundColor: '#fff', // Clean white for cards
+    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 14,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#eee', // Border color for cards
+    borderColor: '#eee',
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: 2 },
@@ -223,23 +244,24 @@ const styles = StyleSheet.create({
   busName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1D3557', // Dark text for bus name
+    color: '#1D3557',
   },
   tripDetails: {
     marginTop: 4,
     fontSize: 14,
-    color: '#777', // Text Grey for details
+    color: '#777',
   },
   purchaseBtn: {
-    marginTop: 10,
-    backgroundColor: '#4facfe', // Primary Brand Blue
-    padding: 10,
-    borderRadius: 8,
+    marginTop: 12,
+    backgroundColor: '#4facfe',
+    padding: 12,
+    borderRadius: 10,
     alignItems: 'center',
   },
   purchaseText: {
-    color: '#fff', // White text for purchase button
+    color: '#fff',
     fontWeight: '600',
+    fontSize: 15,
   },
 });
 

@@ -1,20 +1,21 @@
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 
 export default function Index() {
   const router = useRouter();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace('/splash');  // Navigate to the dashboard after a short delay
-    }, 3000);  // 3 seconds to let the splash screen appear before navigating
+      router.replace('/splash'); // Make sure app/splash.js exists
+    }, 3000);
 
-    return () => clearTimeout(timer);  // Cleanup the timer on component unmount
-  }, []);  // Empty dependency array ensures this effect runs only once
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <View style={styles.container}>
+      <ActivityIndicator size="large" color="#4facfe" />
       <Text style={styles.text}>Loading App...</Text>
     </View>
   );
@@ -25,10 +26,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ffffff', // Set background color to white
+    backgroundColor: '#ffffff',
   },
   text: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#4facfe',
+    marginTop: 16,
   },
 });

@@ -1,162 +1,198 @@
 // app/ForgotPassword.jsx
 
 import React, { useState } from 'react';
-import { View, TextInput, Alert, Text, StyleSheet, TouchableOpacity, ImageBackground, RadioButton } from 'react-native';
-import { Ionicons } from 'react-native-vector-icons'; // Importing icons from react-native-vector-icons
-import { useRouter } from 'expo-router';  // Using expo-router for navigation
+import {
+  View,
+  TextInput,
+  Alert,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { Ionicons } from 'react-native-vector-icons';
+import { useRouter } from 'expo-router';
 
 const ForgotPassword = () => {
-  const [method, setMethod] = useState('phone');  // Tracks whether phone or email is selected
+  const [method, setMethod] = useState('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const router = useRouter();
 
   const handleResetPassword = () => {
-    if (method === 'phone' && !phoneNumber) {
-      Alert.alert('Error', 'Please fill in your phone number');
-      return;
-    }
+  if (method === 'phone' && !phoneNumber) {
+    Alert.alert('Error', 'Please enter your phone number');
+    return;
+  }
 
-    if (method === 'email' && !email) {
-      Alert.alert('Error', 'Please fill in your email address');
-      return;
-    }
+  if (method === 'email' && !email) {
+    Alert.alert('Error', 'Please enter your email address');
+    return;
+  }
 
-    if (method === 'phone' && phoneNumber.length !== 11) {
-      Alert.alert('Error', 'Phone number must be 11 digits');
-      return;
-    }
+  if (method === 'phone' && phoneNumber.length !== 11) {
+    Alert.alert('Error', 'Phone number must be 11 digits');
+    return;
+  }
 
-    // Logic for resetting password
-    Alert.alert('Success', `A password reset link has been sent via ${method === 'phone' ? 'phone number' : 'email'}.`);
-
-    // Optionally navigate back to the login page after resetting
-    router.push('/Login');
-  };
+  // Simulate sending OTP
+  Alert.alert(
+    'OTP Sent',
+    `An OTP has been sent to your ${method === 'phone' ? 'phone number' : 'email'} for verification.`,
+    [
+      {
+        text: 'Proceed',
+        onPress: () => {
+          router.push({
+            pathname: '/VerifyOTP',
+            params: {
+              method,
+              contact: method === 'phone' ? phoneNumber : email,
+            },
+          });
+        },
+      },
+    ]
+  );
+};
 
   return (
-    <ImageBackground
-      source={require('../assets/icon.png')}  // Background image
-      style={styles.background}
-    >
-      <View style={styles.container}>
+    <View style={styles.container}>
+      <View style={styles.card}>
         <Text style={styles.heading}>Reset Your Password</Text>
 
-        {/* Method Selection */}
-        <View style={styles.methodSelection}>
-          <Text style={styles.methodLabel}>Choose Reset Method:</Text>
-          <View style={styles.radioButtons}>
-            <TouchableOpacity onPress={() => setMethod('phone')} style={styles.radioOption}>
-              <Text style={styles.radioText}>By Phone</Text>
+        {/* Method Switch */}
+        <View style={styles.methodSwitch}>
+          <Text style={styles.label}>Choose Reset Method:</Text>
+          <View style={styles.methodOptions}>
+            <TouchableOpacity
+              style={[styles.methodButton, method === 'phone' && styles.activeButton]}
+              onPress={() => setMethod('phone')}
+            >
+              <Text style={method === 'phone' ? styles.activeText : styles.methodText}>
+                By Phone
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setMethod('email')} style={styles.radioOption}>
-              <Text style={styles.radioText}>By Email</Text>
+            <TouchableOpacity
+              style={[styles.methodButton, method === 'email' && styles.activeButton]}
+              onPress={() => setMethod('email')}
+            >
+              <Text style={method === 'email' ? styles.activeText : styles.methodText}>
+                By Email
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Phone number input field with an icon */}
+        {/* Input */}
         {method === 'phone' && (
           <View style={styles.inputWrapper}>
-            <Ionicons name="call-outline" size={24} color="#4facfe" style={styles.icon} />
+            <Ionicons name="call-outline" size={22} color="#4facfe" style={styles.icon} />
             <TextInput
               style={styles.input}
               placeholder="Phone Number"
               value={phoneNumber}
               onChangeText={setPhoneNumber}
               keyboardType="number-pad"
-              maxLength={11}  // Restrict input to 11 digits
+              maxLength={11}
               placeholderTextColor="#ccc"
             />
           </View>
         )}
 
-        {/* Email input field with an icon */}
         {method === 'email' && (
           <View style={styles.inputWrapper}>
-            <Ionicons name="mail-outline" size={24} color="#4facfe" style={styles.icon} />
+            <Ionicons name="mail-outline" size={22} color="#4facfe" style={styles.icon} />
             <TextInput
               style={styles.input}
               placeholder="Email Address"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
+              autoCapitalize="none"
               placeholderTextColor="#ccc"
             />
           </View>
         )}
 
-        {/* Reset Password Button */}
+        {/* Button */}
         <TouchableOpacity style={styles.button} onPress={handleResetPassword}>
           <Text style={styles.buttonText}>Reset Password</Text>
         </TouchableOpacity>
 
-        {/* Back to Login Link */}
+        {/* Back Link */}
         <TouchableOpacity onPress={() => router.push('/Login')}>
           <Text style={styles.backToLogin}>Back to Login</Text>
         </TouchableOpacity>
       </View>
-    </ImageBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
   container: {
-    width: '100%',
-    maxWidth: 400,
-    padding: 30,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background to enhance contrast
-    borderRadius: 15,
-    alignItems: 'center',
+    flex: 1,
+    backgroundColor: '#F8F8F8',
+    paddingHorizontal: 24,
+    justifyContent: 'center',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 5,
   },
   heading: {
-    fontSize: 32,
-    color: '#fff',
-    fontWeight: 'bold',
-    marginBottom: 30,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1D3557',
+    marginBottom: 20,
     textAlign: 'center',
   },
-  methodSelection: {
-    marginBottom: 20,
-    width: '100%',
-    alignItems: 'center',
-  },
-  methodLabel: {
-    fontSize: 18,
-    color: '#fff',
-    marginBottom: 10,
-  },
-  radioButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-  },
-  radioOption: {
-    padding: 10,
-    backgroundColor: '#4facfe',
-    borderRadius: 25,
-    marginHorizontal: 10,
-  },
-  radioText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  label: {
     fontSize: 16,
+    color: '#1D3557',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  methodSwitch: {
+    marginBottom: 20,
+  },
+  methodOptions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  methodButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    backgroundColor: '#eaf4ff',
+  },
+  activeButton: {
+    backgroundColor: '#4facfe',
+  },
+  methodText: {
+    color: '#457B9D',
+    fontWeight: '500',
+  },
+  activeText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-    height: 50,
     backgroundColor: '#fff',
     borderRadius: 25,
-    marginBottom: 15,
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
+    height: 50,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   icon: {
     marginRight: 10,
@@ -167,26 +203,26 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-    width: '100%',
-    height: 50,
     backgroundColor: '#4facfe',
+    height: 50,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
-    elevation: 5,
+    marginTop: 10,
+    elevation: 3,
   },
   buttonText: {
-    fontSize: 18,
-    color: '#fff',
-    fontWeight: 'bold',
+    color: '#F1FAEE',
+    fontSize: 16,
+    fontWeight: '600',
   },
   backToLogin: {
-    fontSize: 16,
     color: '#4facfe',
-    marginTop: 10,
+    fontWeight: '600',
+    fontSize: 15,
+    textAlign: 'center',
+    marginTop: 18,
     textDecorationLine: 'underline',
-    fontWeight: 'bold',
   },
 });
 

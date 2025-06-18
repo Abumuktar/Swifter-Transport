@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,246 +6,266 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
   Alert,
+  Dimensions,
+  SafeAreaView,
+  Platform,
+  Keyboard,
+  LogBox,
 } from 'react-native';
-import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
-const TrackCourierScreen = () => {
+const BRAND_PRIMARY = "#1D3557";
+const BRAND_SECONDARY = "#4facfe";
+const BRAND_ACCENT = "#457B9D";
+const BRAND_BG = "#fff";
+const BRAND_CARD = "#F8FBFF";
+const BRAND_TEXT = "#222";
+const BRAND_MUTED = "#A7B4C3";
+const BRAND_SHADOW = "#e4eefa";
+
+const { width } = Dimensions.get('window');
+
+export default function TrackCourierScreen() {
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    // Suppress specific warning about useInsertionEffect
+    LogBox.ignoreLogs(['useInsertionEffect']);
+  }, []);
+
   const handleTrack = () => {
-    Alert.alert("Tracking", "Fetching courier details...");
-    // Implement API integration here
+    Keyboard.dismiss();
+    if (!trackingNumber.trim()) {
+      Alert.alert('Tracking', 'Please enter a tracking number.');
+      return;
+    }
+    navigation.navigate("TrackingDetailsScreen", { trackingNumber });
+  };
+
+  const handleBack = () => {
+    if (navigation && navigation.canGoBack && navigation.canGoBack()) {
+      navigation.goBack();
+    } else if (navigation && typeof navigation.navigate === 'function') {
+      navigation.navigate('Home');
+    }
   };
 
   return (
-    <LinearGradient colors={['#4facfe', '#00f2fe']} style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        
-        {/* Header */}
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header with Back Button */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={handleBack}
+            activeOpacity={0.8}
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="chevron-back" size={26} color={BRAND_PRIMARY} />
+          </TouchableOpacity>
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={styles.headerTitle}>Track Courier</Text>
+          </View>
+          <View style={{ width: 36 }} />
+        </View>
+
+        {/* Main Content */}
         <View style={styles.header}>
-          <FontAwesome5 name="shipping-fast" size={30} color="#fff" />
+          <View style={styles.iconCircle}>
+            <FontAwesome5 name="shipping-fast" size={28} color={BRAND_PRIMARY} />
+          </View>
           <Text style={styles.title}>Track Your Courier</Text>
           <Text style={styles.subtitle}>Stay updated with your delivery</Text>
         </View>
 
-        {/* Input Field */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            placeholder="Enter Tracking Number"
-            placeholderTextColor="#ccc"
-            style={styles.input}
-          />
-          <TouchableOpacity style={styles.trackButton} onPress={handleTrack}>
-            <Ionicons name="search" size={20} color="#fff" />
+        {/* Tracking Input */}
+        <View style={styles.inputSection}>
+          <View style={styles.inputWrapper}>
+            <Ionicons
+              name="barcode-outline"
+              size={22}
+              color={BRAND_ACCENT}
+              style={{ marginRight: 8 }}
+            />
+            <TextInput
+              placeholder="Enter Tracking Number"
+              placeholderTextColor={BRAND_MUTED}
+              style={styles.input}
+              value={trackingNumber}
+              onChangeText={setTrackingNumber}
+              keyboardType="default"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              returnKeyType="search"
+              onSubmitEditing={handleTrack}
+              blurOnSubmit
+              accessibilityLabel="Tracking Number Input"
+            />
+          </View>
+          <TouchableOpacity
+            style={styles.trackButton}
+            onPress={handleTrack}
+            activeOpacity={0.85}
+            accessibilityLabel="Track Courier"
+          >
+            <Ionicons name="search" size={20} color={BRAND_PRIMARY} />
             <Text style={styles.trackButtonText}>Track</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Tracking Summary */}
-        <View style={styles.summaryCard}>
-          <Text style={styles.status}>🟢 In Transit</Text>
-          <Text style={styles.courierInfo}>Courier: ISMEED Express</Text>
-          <Text style={styles.eta}>Estimated Delivery: May 5, 2025</Text>
-        </View>
-
-        {/* Progress Tracker */}
-        <View style={styles.tracker}>
-          {['Ordered', 'Dispatched', 'In Transit', 'Out for Delivery', 'Delivered'].map((step, index) => (
-            <View key={index} style={styles.stepContainer}>
-              <View style={[styles.circle, index <= 2 ? styles.activeStep : {}]}>
-                <Text style={styles.stepNumber}>{index + 1}</Text>
-              </View>
-              <Text style={[styles.stepLabel, index <= 2 ? styles.activeText : {}]}>{step}</Text>
-              {index < 4 && <View style={[styles.line, index < 2 ? styles.activeLine : {}]} />}
-            </View>
-          ))}
-        </View>
-
-        {/* Delivery Updates */}
-        <View style={styles.timeline}>
-          <Text style={styles.timelineTitle}>Delivery Updates</Text>
-          <View style={styles.updateItem}>
-            <MaterialIcons name="access-time" size={18} color="#fff" />
-            <Text style={styles.updateText}>May 2, 3:00 PM – Package arrived at hub</Text>
-          </View>
-          <View style={styles.updateItem}>
-            <MaterialIcons name="local-shipping" size={18} color="#fff" />
-            <Text style={styles.updateText}>May 1, 10:00 AM – Picked up by courier</Text>
-          </View>
-          <View style={styles.updateItem}>
-            <Ionicons name="cube-outline" size={18} color="#fff" />
-            <Text style={styles.updateText}>Apr 30, 6:00 PM – Order processed</Text>
-          </View>
-        </View>
-
-        {/* Help Section */}
-        <View style={styles.helpSection}>
-          <Text style={styles.helpText}>Need help? </Text>
-          <TouchableOpacity onPress={() => Alert.alert("Support", "Contacting support...")}>
-            <Text style={styles.helpLink}>Contact Support</Text>
-          </TouchableOpacity>
+        {/* Info / Help Section */}
+        <View style={styles.infoCard}>
+          <Ionicons name="information-circle-outline" size={22} color={BRAND_ACCENT} style={{ marginRight: 8 }} />
+          <Text style={styles.infoText}>
+            Enter your tracking number to get real-time delivery status and updates. If you face any issues, please{' '}
+            <Text style={styles.linkText} onPress={() => navigation.navigate('HelpCentre')}>contact support</Text>.
+          </Text>
         </View>
       </ScrollView>
-    </LinearGradient>
+    </SafeAreaView>
   );
-};
-
-const { width } = Dimensions.get('window');
+}
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
+    backgroundColor: BRAND_BG,
   },
   scrollContent: {
     paddingBottom: 40,
+    backgroundColor: BRAND_BG,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingTop: Platform.OS === 'ios' ? 10 : 18,
+    paddingBottom: 6,
+    backgroundColor: BRAND_BG,
+    borderBottomWidth: 1,
+    borderColor: '#f2f2f2',
+    marginBottom: 10,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "#F0F5FF",
+    elevation: 1,
+  },
+  headerTitle: {
+    fontSize: 20,
+    color: BRAND_PRIMARY,
+    fontWeight: 'bold',
+    letterSpacing: 0.2,
   },
   header: {
     alignItems: 'center',
-    marginTop: 60,
-    marginBottom: 20,
+    marginTop: 24,
+    marginBottom: 28,
+    paddingHorizontal: 8,
+  },
+  iconCircle: {
+    backgroundColor: "#EAF4FB",
+    borderRadius: 30,
+    padding: 14,
+    marginBottom: 10,
+    elevation: 2,
+    shadowColor: BRAND_SHADOW,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 }
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 8,
+    color: BRAND_PRIMARY,
+    marginTop: 10,
+    letterSpacing: 0.2,
+    textAlign: 'center'
   },
   subtitle: {
-    fontSize: 14,
-    color: '#f0f0f0',
+    fontSize: 15,
+    color: BRAND_ACCENT,
+    marginTop: 5,
+    fontWeight: '500',
+    textAlign: 'center'
   },
-  inputContainer: {
+  inputSection: {
     flexDirection: 'row',
-    marginHorizontal: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 12,
-    padding: 10,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: "#F4F8FC",
+    borderRadius: 16,
+    padding: 6,
     alignItems: 'center',
+    shadowColor: BRAND_SHADOW,
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  inputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: "#e2eafc"
   },
   input: {
     flex: 1,
-    color: '#fff',
+    color: BRAND_TEXT,
     fontSize: 16,
-    paddingHorizontal: 10,
+    paddingVertical: 8,
+    letterSpacing: 1,
   },
   trackButton: {
-    backgroundColor: '#ff4e50',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 10,
+    backgroundColor: BRAND_SECONDARY,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    elevation: 2,
   },
   trackButtonText: {
-    color: '#fff',
+    color: BRAND_PRIMARY,
     marginLeft: 6,
     fontWeight: 'bold',
-  },
-  summaryCard: {
-    margin: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 14,
-    padding: 15,
-  },
-  status: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  courierInfo: {
-    color: '#ddd',
-    fontSize: 14,
-  },
-  eta: {
-    color: '#ccc',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  tracker: {
-    marginHorizontal: 20,
-    marginTop: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  stepContainer: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  circle: {
-    backgroundColor: '#ccc',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  activeStep: {
-    backgroundColor: '#00f2fe',
-  },
-  stepNumber: {
-    color: '#000',
-    fontWeight: 'bold',
-  },
-  stepLabel: {
-    color: '#999',
-    fontSize: 10,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  activeText: {
-    color: '#fff',
-  },
-  line: {
-    height: 2,
-    backgroundColor: '#aaa',
-    position: 'absolute',
-    top: 14,
-    left: '50%',
-    right: '-50%',
-    zIndex: -1,
-  },
-  activeLine: {
-    backgroundColor: '#00f2fe',
-  },
-  timeline: {
-    marginTop: 30,
-    marginHorizontal: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 14,
-    padding: 15,
-  },
-  timelineTitle: {
-    color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    letterSpacing: 0.5,
   },
-  updateItem: {
+  infoCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
+    alignItems: 'flex-start',
+    backgroundColor: '#EAF4FB',
+    borderRadius: 14,
+    marginHorizontal: 18,
+    marginTop: 15,
+    padding: 14,
+    elevation: 1,
   },
-  updateText: {
-    color: '#eee',
-    marginLeft: 10,
-    fontSize: 14,
+  infoText: {
+    flex: 1,
+    color: BRAND_TEXT,
+    fontSize: 15,
+    lineHeight: 21,
   },
-  helpSection: {
-    marginTop: 30,
-    alignItems: 'center',
-  },
-  helpText: {
-    color: '#fff',
-    fontSize: 14,
-  },
-  helpLink: {
-    color: '#f9d423',
-    fontWeight: '600',
-    marginTop: 4,
+  linkText: {
+    color: BRAND_SECONDARY,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
   },
 });
-
-export default TrackCourierScreen;
